@@ -5,14 +5,23 @@ import { useState } from "react";
 import { bookingSites } from "@/lib/travel";
 import { useTravelStore } from "@/lib/store";
 
+function addDays(date: Date, days: number) {
+  const copy = new Date(date);
+  copy.setDate(copy.getDate() + days);
+  return copy.toISOString().slice(0, 10);
+}
+
 export function RouteForm() {
   const router = useRouter();
   const { addRoute } = useTravelStore();
+  const [error, setError] = useState("");
+  const defaultDeparture = addDays(new Date(), 30);
+  const defaultReturn = addDays(new Date(), 35);
   const [form, setForm] = useState({
     origin: "上海",
     destination: "福岡",
-    departureDate: "",
-    returnDate: "",
+    departureDate: defaultDeparture,
+    returnDate: defaultReturn,
     passengers: 1,
     targetPrice: 1500,
     memo: ""
@@ -20,8 +29,13 @@ export function RouteForm() {
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    await addRoute(form);
-    router.push("/routes");
+    setError("");
+    try {
+      await addRoute(form);
+      router.push("/routes");
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : "路線の保存に失敗しました。");
+    }
   }
 
   return (
@@ -49,6 +63,7 @@ export function RouteForm() {
       <Field label="メモ" className="mt-4">
         <textarea className="input min-h-28" value={form.memo} onChange={(event) => setForm({ ...form, memo: event.target.value })} />
       </Field>
+      {error ? <p className="mt-4 text-sm font-medium text-rose-600">{error}</p> : null}
       <button className="mt-6 rounded-full bg-ink px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800">
         路線を追加
       </button>
@@ -59,6 +74,7 @@ export function RouteForm() {
 export function PriceForm({ routeId }: { routeId?: string }) {
   const router = useRouter();
   const { routes, addPrice } = useTravelStore();
+  const [error, setError] = useState("");
   const [form, setForm] = useState({
     routeId: routeId || routes[0]?.id || "",
     price: 1480,
@@ -66,8 +82,8 @@ export function PriceForm({ routeId }: { routeId?: string }) {
     airline: "",
     bookingSite: bookingSites[0],
     baggageIncluded: true,
-    departureTime: "",
-    arrivalTime: "",
+    departureTime: "08:30",
+    arrivalTime: "11:40",
     transfers: 0,
     url: "",
     checkedAt: new Date().toISOString().slice(0, 16)
@@ -75,11 +91,16 @@ export function PriceForm({ routeId }: { routeId?: string }) {
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    await addPrice({
-      ...form,
-      checkedAt: new Date(form.checkedAt).toISOString()
-    });
-    router.push(form.routeId ? `/routes/${form.routeId}` : "/routes");
+    setError("");
+    try {
+      await addPrice({
+        ...form,
+        checkedAt: new Date(form.checkedAt).toISOString()
+      });
+      router.push(form.routeId ? `/routes/${form.routeId}` : "/routes");
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : "価格の保存に失敗しました。");
+    }
   }
 
   return (
@@ -134,6 +155,7 @@ export function PriceForm({ routeId }: { routeId?: string }) {
       <Field label="URL" className="mt-4">
         <input className="input" type="url" value={form.url} onChange={(event) => setForm({ ...form, url: event.target.value })} required />
       </Field>
+      {error ? <p className="mt-4 text-sm font-medium text-rose-600">{error}</p> : null}
       <button className="mt-6 rounded-full bg-ink px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800">
         価格を保存
       </button>
