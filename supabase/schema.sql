@@ -36,3 +36,64 @@ create table if not exists alert_settings (
   notify_near_lowest boolean not null default true,
   last_updated_at timestamptz not null default now()
 );
+
+alter table routes enable row level security;
+alter table prices enable row level security;
+alter table alert_settings enable row level security;
+
+drop policy if exists "public routes read" on routes;
+create policy "public routes read"
+on routes for select
+to anon, authenticated
+using (true);
+
+drop policy if exists "public routes write" on routes;
+create policy "public routes write"
+on routes for insert
+to anon, authenticated
+with check (true);
+
+drop policy if exists "public routes update" on routes;
+create policy "public routes update"
+on routes for update
+to anon, authenticated
+using (true)
+with check (true);
+
+drop policy if exists "public prices read" on prices;
+create policy "public prices read"
+on prices for select
+to anon, authenticated
+using (true);
+
+drop policy if exists "public prices write" on prices;
+create policy "public prices write"
+on prices for insert
+to anon, authenticated
+with check (true);
+
+drop policy if exists "public prices update" on prices;
+create policy "public prices update"
+on prices for update
+to anon, authenticated
+using (true)
+with check (true);
+
+drop policy if exists "public alert settings read" on alert_settings;
+create policy "public alert settings read"
+on alert_settings for select
+to anon, authenticated
+using (true);
+
+drop policy if exists "public alert settings write" on alert_settings;
+create policy "public alert settings write"
+on alert_settings for insert
+to anon, authenticated
+with check (true);
+
+drop policy if exists "public alert settings update" on alert_settings;
+create policy "public alert settings update"
+on alert_settings for update
+to anon, authenticated
+using (true)
+with check (true);
